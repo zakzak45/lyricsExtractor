@@ -27,7 +27,7 @@ def extract_lyrics():
 
 
 root = Tk()
-root.title("DataFlair Song Lyrics Extractor")
+root.title("Zayne's Song lyrics Extractor")
 root.geometry("600x200")
 root.resizable(0, 0)
 root.config(bg='CadetBlue')
