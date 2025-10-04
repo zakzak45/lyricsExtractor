@@ -33,7 +33,7 @@ root.resizable(0, 0)
 root.config(bg='CadetBlue')
 
 
-Label(root, text='DataFlair Song Lyrics Extractor', font=("Comic Sans MS", 16, 'bold'), bg='CadetBlue').pack(side=TOP,fill=X)
+Label(root, text=' Zaynes Song Lyrics Extractor', font=("Comic Sans MS", 16, 'bold'), bg='CadetBlue').pack(side=TOP,fill=X)
 
 Label(root, text='Enter the song name: ', font=("Times New Roman", 14), bg='CadetBlue').place(x=20, y=50)
 song = StringVar()
