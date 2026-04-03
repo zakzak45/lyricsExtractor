@@ -32,12 +32,7 @@ def extract_lyrics(artist: str, song: str) -> str:
 	return lyrics
 
 
-@app.get("/")
-def root():
-	return {"status": "running"}
-
-
-@app.get("/ui", response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse)
 def ui():
 	return """<!DOCTYPE html>
 <html lang="en">
@@ -233,6 +228,11 @@ def ui():
 	</body>
 </html>
 """
+
+
+@app.get("/health")
+def health():
+	return {"status": "running"}
 
 
 @app.get("/lyrics")
