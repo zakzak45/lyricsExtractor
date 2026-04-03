@@ -1,50 +1,49 @@
 
-from tkinter import *
-import tkinter.messagebox as mb
-
-import json
+from fastapi import FastAPI, HTTPException
 import requests
 
+app = FastAPI()
 
-def extract_lyrics():
-	global artist, song
-	artist_name = str(artist.get())
-	song_name = str(song.get()).lower()
-	link = 'https://api.lyrics.ovh/v1/'+artist_name.replace(' ', '%20')+'/'+song_name.replace(' ', '%20')
 
-	req = requests.get(link)
-	json_data = json.loads(req.content)
+def extract_lyrics(artist: str, song: str) -> str:
+	artist_name = artist.strip()
+	song_name = song.strip().lower()
+	if not artist_name or not song_name:
+		raise ValueError("Artist and song are required")
 
+	link = (
+		"https://api.lyrics.ovh/v1/"
+		+ artist_name.replace(" ", "%20")
+		+ "/"
+		+ song_name.replace(" ", "%20")
+	)
+
+	response = requests.get(link, timeout=10)
+	if response.status_code == 404:
+		raise LookupError("Song not found")
+
+	response.raise_for_status()
+	json_data = response.json()
+	lyrics = json_data.get("lyrics")
+	if not lyrics:
+		raise LookupError("Lyrics not available")
+
+	return lyrics
+
+
+@app.get("/")
+def root():
+	return {"status": "running"}
+
+
+@app.get("/lyrics")
+def lyrics(artist: str, song: str):
 	try:
-		lyrics = json_data['lyrics']
-
-		exec("print(lyrics)")
-
-		mb.showinfo('Lyrics printed', f'The lyrics to the song you wanted have been extracted, and have been printed on your command terminal.')
-	except:
-		mb.showerror('No such song found',
-		'We were unable to find such a song in our directory. Please recheck the name of the artist and the song, and if it correct, we apologize because we do not have that song available with us.')
-
-
-root = Tk()
-root.title("Zayne's Song lyrics Extractor")
-root.geometry("600x200")
-root.resizable(0, 0)
-root.config(bg='CadetBlue')
-
-
-Label(root, text=' Zaynes Song Lyrics Extractor', font=("Comic Sans MS", 16, 'bold'), bg='CadetBlue').pack(side=TOP,fill=X)
-
-Label(root, text='Enter the song name: ', font=("Times New Roman", 14), bg='CadetBlue').place(x=20, y=50)
-song = StringVar()
-Entry(root, width=40, textvariable=song, font=('Times New Roman', 14)).place(x=200, y=50)
-
-Label(root, text='Enter the artist\'s name: ', font=("Times New Roman", 14), bg='CadetBlue').place(x=20, y=100)
-artist = StringVar()
-Entry(root, width=40, textvariable=artist, font=('Times New Roman', 14)).place(x=200, y=100)
-
-Button(root, text='Extract lyrics', font=("Georgia", 10), width=15, command=extract_lyrics).place(x=220, y=150)
-
-
-root.update()
-root.mainloop()
+		result = extract_lyrics(artist, song)
+		return {"artist": artist, "song": song, "lyrics": result}
+	except ValueError as exc:
+		raise HTTPException(status_code=400, detail=str(exc))
+	except LookupError as exc:
+		raise HTTPException(status_code=404, detail=str(exc))
+	except requests.RequestException as exc:
+		raise HTTPException(status_code=502, detail=str(exc))
